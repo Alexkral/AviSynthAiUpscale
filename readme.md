@@ -1,4 +1,3 @@
-
 #AviSynth AiUpscale v1.0
 An AviSynth+ implementation of some Super-Resolution Convolutional Neural Networks.
 
@@ -43,13 +42,13 @@ The HQ and HQ Sharp models are made by a Medium model followed by a reduced VDSR
 
 | Lanczos | AiUpscale HQ Sharp |
 | ------------ | ------------ |
-| ![L3x2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_L3.png) | ![SRx2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_SR.png.png) |
+| ![L3x2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_L3.png) | ![SRx2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_SR.png) |
 
 ## 3x
 
 | Lanczos | AiUpscale HQ Sharp |
 | ------------ | ------------ |
-| ![L3x3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/plant_821_L3.png) | ![SRx3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/plant_821_SR.png.png) |
+| ![L3x3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/plant_821_L3.png) | ![SRx3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/plant_821_SR.png) |
 
 ## 4x
 
