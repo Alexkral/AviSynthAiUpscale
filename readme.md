@@ -42,7 +42,7 @@ The HQ and HQ Sharp models are made by a Medium model followed by a reduced VDSR
 
 | Lanczos | AiUpscale HQ Sharp |
 | ------------ | ------------ |
-| ![L3x2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_L3.png) | ![SRx2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_SR.png) |
+| <img src="https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_L3.png" width="448" height="664"> | ![SRx2](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/quokka_91_SR.png) |
 
 ## 3x
 
