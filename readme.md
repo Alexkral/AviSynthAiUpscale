@@ -57,5 +57,6 @@ The HQ and HQ Sharp models are made by a Medium model followed by a reduced VDSR
 | ![L3x4](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/comic_L3.png) | ![SRx4](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/comic_SR.png) |
 
 ## References
+- [Doom9 thread](https://forum.doom9.org/showthread.php?t=181665 "Doom9 thread")
 - [FSRCNN-TensorFlow](https://github.com/igv/FSRCNN-TensorFlow "FSRCNN-TensorFlow")
 - [Single Image Super-Resolution Using Deep Learning](https://www.mathworks.com/help/images/single-image-super-resolution-using-deep-learning.html?lang=en "Single Image Super-Resolution Using Deep Learning")
