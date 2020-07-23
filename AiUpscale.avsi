@@ -21,15 +21,15 @@
 
     - Input: (Default = last). Input image or progressive video in any AviSynth+ color format except YV411 and 32 bit float.
     - Factor: (Default = 2). Upscaling factor (1, 2, 3 or 4). 1 is for chroma resampling. Must be 2 when Double is set for Luma and/or Chroma. Ignored when Width and Height are set.
-    - Luma: (Default = ‚ÄúMedium‚Äù). Model for luma or RGB upscaling. Must be an AiUpscale model (‚ÄúFast‚Äù, ‚ÄúMedium‚Äù, ‚ÄúVDSR‚Äù, ‚ÄúHQ‚Äù or ‚ÄúHQ Sharp‚Äù).
-    - Chroma: (Default = ‚ÄúLanczos‚Äù). Method for chroma upscaling. Can be an AiUpscale model, KrigBilateral (only for 4:2:0 or 4:4:4 and 2x upscale ratio), or any AviSynth resize method.
-    - CResample: (Default = ‚Äú‚Äù). Method for chroma resampling. Can be an AiUpscale model (only for 4:2:0), KrigBilateral, any AviSynth method, or an empty string which means that the chroma is not resampled.
+    - Luma: (Default = ìMediumî). Model for luma or RGB upscaling. Must be an AiUpscale model (ìFastî, ìMediumî, ìVDSRî, ìHQî or ìHQ Sharpî).
+    - Chroma: (Default = ìLanczosî). Method for chroma upscaling. Can be an AiUpscale model, KrigBilateral (only for 4:2:0 or 4:4:4 and 2x upscale ratio), or any AviSynth resize method.
+    - CResample: (Default = ìî). Method for chroma resampling. Can be an AiUpscale model (only for 4:2:0), KrigBilateral, any AviSynth method, or an empty string which means that the chroma is not resampled.
     - Width, Height: (Default = 0). Target Width and Height. Only for the VDSR, HQ and HQ Sharp models. Both must be between 1x and 4x for the VDSR model, and between 2x and 4x for the HQ models.
       When the chroma is not resampled, Width must be Mod 2 for subsampled formats, and Height must be Mod 2 for 4:2:0. Default = 0 which means that Factor will be used instead.
     - Double: (Default = 0). This allows to repeat a 2x upscaling in the same pass. Factor must be 2. Only for the Fast and Medium models. 0 to disable, 1 to repeat a 2x luma upscaling, 2 to repeat a 2x chroma upscaling, and 3 to repeat both.
       When only used for luma or chroma, the other will be directly upscaled to 4x.
-    - Mode: (default = ‚ÄúPhoto‚Äù). Can be ‚ÄúPhoto‚Äù or ‚ÄúIllustration‚Äù.
-    - CPlace: (Default = ‚ÄúMPEG2‚Äù). Chroma placement when the source is YV12. Same as ChromaInPlacement in AviSynth Convert. This affects correct chroma positioning, most of the time it shouldn‚Äôt be changed. Can also be ‚ÄúMPEG1‚Äù and ‚ÄúDV‚Äù.
+    - Mode: (default = ìPhotoî). Can be ìPhotoî or ìIllustrationî.
+    - CPlace: (Default = ìMPEG2î). Chroma placement when the source is YV12. Same as ChromaInPlacement in AviSynth Convert. This affects correct chroma positioning, most of the time it shouldnít be changed. Can also be ìMPEG1î and ìDVî.
     
 */
 
@@ -106,8 +106,8 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     CROffset = (Input.Is422 || MPEG2) ? 0.5 : 0.0
     COffset = (Input.Is422 || MPEG2) ? OFactor * 0.5 : 0.0
 
-    Global Path = "Shaders\"
-    PathAIU = Path + Mode + "\"
+    AiUpPath = ScriptDir() + "Shaders\"
+    PathAIU = AiUpPath + Mode + "\"
     If (AIUL1 || (Luma == "VDSR" && Width == 0)) {
         Path2 = PathAIU + Luma + "\" + string(LFactor) + "x\"
     } else {
@@ -401,7 +401,7 @@ Function AIUVDSR(clip c, int W, int H, string SPath)
     InPrec = c.BitsPerComponent == 16 ? 2 : 0
     Size = CreateParamFloat4(c.Width, c.Height)
     clip = ConvertToShader(c, Precision = InPrec)
-    Shader(clip, Path + "Lanczos3\Lanczos3.cso", Param2 = Size, Width = W, Height = H)
+    Shader(clip, ScriptDir() + "Shaders\" + "Lanczos3\Lanczos3.cso", Param2 = Size, Width = W, Height = H)
     Shader(SPath + "feature_1.cso", output = 2)
     Shader(SPath + "feature_2.cso", output = 3)
     Shader(SPath + "feature_3.cso", output = 4)
@@ -470,7 +470,7 @@ Function AIUVDSR(clip c, int W, int H, string SPath)
 
 function AIUHQ(clip c, int Width, int Height, string SPath, string Size, bool UPS)
 {
-    UPS ? Shader(c, Path + "Lanczos3\Lanczos3.cso", Param2 = Size, Width = Width, Height = Height) : c
+    UPS ? Shader(c, ScriptDir() + "Shaders\" + "Lanczos3\Lanczos3.cso", Param2 = Size, Width = Width, Height = Height) : c
     Shader(SPath + "feature_1.cso", output = 2, Width = Width, Height = Height)
     Shader(SPath + "feature_2.cso", output = 3, Width = Width, Height = Height)
     Shader(SPath + "feature_3.cso", output = 4, Width = Width, Height = Height)
@@ -513,7 +513,7 @@ function AIUHQ(clip c, int Width, int Height, string SPath, string Size, bool UP
 Function KrigBilateral(clip c, float Offset) {
     Offset = String(Offset * 0.5, "%.32f") + "f"
     InPrec = c.BitsPerComponent == 16 ? 2 : 1
-    SPath = Path + "KrigBilateral\"
+    SPath = ScriptDir() + "Shaders\" + "KrigBilateral\"
     Chroma = CombinePlanes(ExtractU(c), ExtractV(c), "YUV", "YYY", InPrec == 1 ? "YUV444P8" : "YUV444P16")
     LumaSize = CreateParamFloat4(c.width, c.Height)
     ChromaSize = CreateParamFloat4(Chroma.width, Chroma.Height)
