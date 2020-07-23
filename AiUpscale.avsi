@@ -13,7 +13,7 @@
 
     ----- Installation -----
 
-    Copy this file and the shaders folder to the AviSinth+ plugins folder.
+    Copy this file and the shaders folder to the AviSynth+ plugins folder.
 
     ----- Usage -----
 
