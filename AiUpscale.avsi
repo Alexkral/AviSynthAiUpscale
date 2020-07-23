@@ -5,6 +5,7 @@
 
     A script to test some Super-resolution convolutional neural networks implemented as hlsl pixel shaders, through AviSynth Shader.
     https://github.com/Alexkral/AviSynthAiUpscale
+    https://forum.doom9.org/showthread.php?t=181665
 
     ----- Requirements -----
 
