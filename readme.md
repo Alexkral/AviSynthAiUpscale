@@ -31,7 +31,7 @@ An AviSynth+ implementation of some Super-Resolution Convolutional Neural Networ
 - The Medium model can only do two upscaling steps in the same pass. This means that when Double is set to 2 or 3 and the Medium model is used for chroma upscaling and resampling, only 2 of the 3 required upscaling steps will be done in the same pass.
 
 ## About the models
-The Fast and Medium models and the first module of the HQ an HQ Sharp models, were trained using [FSRCNN-TensorFlow](https://github.com/igv/FSRCNN-TensorFlow "FSRCNN-TensorFlow") with some changes. They have the same architecture as FSRCNNX_x2_8-0-4-1 and FSRCNNX_x2_16-0-4-1, but with different number of filters.
+The Fast and Medium models and the first module of the HQ and HQ Sharp models, were trained using [FSRCNN-TensorFlow](https://github.com/igv/FSRCNN-TensorFlow "FSRCNN-TensorFlow") with some changes. They have the same architecture as FSRCNNX_x2_8-0-4-1 and FSRCNNX_x2_16-0-4-1, but with different number of filters.
 The VDSR model and the second module of the HQ and HQ Sharp models, were trained using the [Matlab VDSR example](https://www.mathworks.com/help/images/single-image-super-resolution-using-deep-learning.html?lang=en "Matlab VDSR example"), also with some changes and a reduced number of filters and layers.
 The HQ and HQ Sharp models are made by a Medium model followed by a reduced VDSR model.
 
