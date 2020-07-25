@@ -14,7 +14,7 @@
 
     ----- Installation -----
 
-    Copy this file and the shaders folder to the AviSynth+ plugins folder.
+    Copy this file and the shaders folder to the AviSynth+ plugins folder (same as AviSynth Shader).
 
     ----- Usage -----
 
@@ -284,7 +284,7 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
         }
     }
 
-    Input = Input.IsY ? P0 : CombinePlanes(P0, P1, P2, Input.IsYUV ? "YUV" : "RGB", "YYY", ConvertBits(Input, 16).PixelType)
+    Input = Input.IsY ? P0 : CombinePlanes(P0, P1, P2, Input.IsYUV ? "YUV" : "RGB", "YYY", TInput.PixelType)
     Input = OutDepth < 16 ? ConvertBits(Input, OutDepth) : Input
     return Input.IsRGB ? ConvertToRGB(Input) : Input
 }
