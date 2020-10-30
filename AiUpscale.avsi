@@ -1,6 +1,6 @@
 /*
 
-    ***** AviSynth AiUpscale v1.0 *****
+    ***** AviSynth AiUpscale v1.1.0 *****
     by Alexkral
 
     A script to test some Super-resolution convolutional neural networks implemented as hlsl pixel shaders, through AviSynth Shader.
@@ -14,14 +14,14 @@
 
     ----- Installation -----
 
-    Copy this file and the shaders folder to the AviSynth+ plugins folder (same as AviSynth Shader).
+    Copy this file and the shaders folder to the AviSynth+ plugins folder.
 
     ----- Usage -----
 
-    AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace")
+    AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace", int "OutDepth")
 
-    - Input: (Default = last). Input image or progressive video in any AviSynth+ color format except YV411 and 32 bit float.
-    - Factor: (Default = 2). Upscaling factor (1, 2, 3 or 4). 1 is for chroma resampling. Must be 2 when Double is set for Luma and/or Chroma. Ignored when Width and Height are set.
+    - Input: (Default = last). Input image or progressive video in any AviSynth+ color format except YV411 and 32 bit float. Alpha planes are upscaled with Lanczos.
+    - Factor: (Default = 2). Upscaling factor (1, 2, 3 or 4). 1 is for chroma resampling. Must be 2 when Double is set for Luma and/or Chroma. Ignored when Width and Height are set except for Factor = 1.
     - Luma: (Default = “Medium”). Model for luma or RGB upscaling. Must be an AiUpscale model (“Fast”, “Medium”, “VDSR”, “HQ” or “HQ Sharp”).
     - Chroma: (Default = “Lanczos”). Method for chroma upscaling. Can be an AiUpscale model, KrigBilateral (only for 4:2:0 or 4:4:4 and 2x upscale ratio), or any AviSynth resize method.
     - CResample: (Default = “”). Method for chroma resampling. Can be an AiUpscale model (only for 4:2:0), KrigBilateral, any AviSynth method, or an empty string which means that the chroma is not resampled.
@@ -29,12 +29,13 @@
       When the chroma is not resampled, Width must be Mod 2 for subsampled formats, and Height must be Mod 2 for 4:2:0. Default = 0 which means that Factor will be used instead.
     - Double: (Default = 0). This allows to repeat a 2x upscaling in the same pass. Factor must be 2. Only for the Fast and Medium models. 0 to disable, 1 to repeat a 2x luma upscaling, 2 to repeat a 2x chroma upscaling, and 3 to repeat both.
       When only used for luma or chroma, the other will be directly upscaled to 4x.
-    - Mode: (default = “Photo”). Can be “Photo” or “Illustration”.
+    - Mode: (default = “Photo”). Can be “Photo” for anything that comes from a camera, or “Illustration” for artwork, drawings, etc.
     - CPlace: (Default = “MPEG2”). Chroma placement when the source is YV12. Same as ChromaInPlacement in AviSynth Convert. This affects correct chroma positioning, most of the time it shouldn’t be changed. Can also be “MPEG1” and “DV”.
+    - OutDepth: (Default = same as input). Output bit depth (8, 10, 12, 14 or 16).
     
 */
 
-Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace")
+Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace", int "OutDepth")
 {
     Mode = default(Mode, "Photo")
     Factor = default(Factor, 2)
@@ -45,6 +46,7 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     Chroma = default(Chroma, "Lanczos") 
     CResample = default(CResample, "")
     CPlace = default(CPlace, "MPEG2")
+    OutDepth = default(OutDepth, Input.BitsPerComponent)
     WFactor = Float(Width) / Input.Width
     HFactor = Float(Height) / Input.Height
    
@@ -86,15 +88,18 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     Assert(!AIUCR || !(Input.Is422 || Input.IsYUY2), "Invalid CResample for 4:2:2")
     Assert(CPlace == "MPEG1" || CPlace == "MPEG2" || CPlace == "DV", "CPlace must be MPEG1, MPEG2 or DV")
     Assert(CPlace == "MPEG2" || Input.Is420, "Invalid CPlace")
-    
+    Assert(OutDepth == 8 || OutDepth == 10 || OutDepth == 12 || OutDepth == 14 || OutDepth == 16, "Invalid OutDepth")
+ 
+    LFactor = Double == 2 ? 4 : Factor
+    Alpha = Input.HasAlpha ? Width == 0 ? LanczosResize(ConvertBits(ExtractA(Input), OutDepth), Input.Width * LFactor, Input.Height * LFactor) : LanczosResize(ConvertBits(ExtractA(Input), OutDepth), Width, Height) : 0
+    YUY2 = Input.IsYUY2
+    Packed = Input.IsPackedRGB
+    Input = YUY2 ? ConvertToYV16(Input) : Input
     Input = RemoveAlphaPlane(Input)
-    Input = Input.IsYUY2 ? ConvertToYV16(Input) : Input
-    Input = Input.IsPackedRGB ? ConvertToPlanarRGB(Input) : Input
-    OutDepth = Input.BitsPerComponent
-    Input = OutDepth > 8 ? ConvertBits(Input, 16) : Input
+    Input = Packed ? ConvertToPlanarRGB(Input) : Input
+    Input = Input.BitsPerComponent > 8 ? ConvertBits(Input, 16) : Input
     Input = Input.Is420 && CPlace == "DV" ? ConvertToYUV420(Input, ChromaInPlacement = "DV", ChromaOutPlacement = "MPEG2", chromaresample = "Sinc") : Input
     CPlace = CPlace == "DV" ? "MPEG2" : CPlace
-    LFactor = Double == 2 ? 4 : Factor
     CFactor = Double == 1 ? 4 : Factor
     OFactor = Double == 0 ? Factor : 4
     Lim = Double % 2 == 1 ? 1 : 0
@@ -102,6 +107,8 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     SWidth = Double == 2 ? Input.Width * 4 : Width == 0 ? Input.Width * Factor : Width
     SHeight = Double == 2 ? Input.Height * 4 : Height == 0 ? Input.Height * Factor : Height
     CRU = (Chroma == CResample) && !(Chroma == "Medium" && Double > 1)
+    Global Fmt = Factor == 1  || (FMCR && CRU) ? "YUV444P" + String(OutDepth) : "YUV444P16"
+    Global OutPrec = (Factor == 1  || (FMCR && CRU)) && OutDepth == 8 ? 1 : 2
     MPEG1 = CPlace == "MPEG1"
     MPEG2 = Input.Is420 && CPlace == "MPEG2"
     CROffset = (Input.Is422 || MPEG2) ? 0.5 : 0.0
@@ -149,6 +156,7 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     
     If (AVSCR) {  
         Input = Input.Is420 ? ConvertToYUV444(Input, ChromaInPlacement = CPlace, ChromaResample = CResample) : ConvertToYUV444(Input, ChromaResample = CResample)
+        Input = Factor == 1 ? ConvertBits(Input, OutDepth) : Input
     } else if (Cresample == "KrigBilateral") {
         Input = KrigBilateral(Input, CROffset)
     } else if (CResample == "VDSR") {
@@ -156,7 +164,7 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
         U = SincResize(U, U.Width, U.Height, CROffset)
         V = AIUVDSR(ExtractV(Input), Input.Width, Input.Height, PathAIU + "VDSR\2x\")
         V = SincResize(V, V.Width, V.Height, CROffset)
-        Input = CombinePlanes(ConvertBits(ExtractY(Input), 16), U, V, "YUV", "YYY", "YUV444P16")
+        Input = CombinePlanes(ConvertBits(ExtractY(Input), U.BitsPerComponent), U, V, "YUV", "YYY", Fmt)
     } else if (HQCR) {
         CRPath1 = Mode == "Illustration" ? PathAIU + "Medium\2x\" : CResample == "HQ" ? PathAIU + "HQ1\Normal\" : PathAIU + "HQ1\Sharp\"
         CRPath2 = CResample == "HQ" ? PathAIU + "HQ2\Normal\2x\" : PathAIU + "HQ2\Sharp\2x\"
@@ -164,7 +172,7 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
         U = SincResize(U, U.Width, U.Height, CROffset)
         V = AIUMedium(ExtractV(Input), 2, 0, Input.Width, Input.Height, CRPath1, CRPath2, True, True)
         V = SincResize(V, V.Width, V.Height, CROffset)
-        Input = CombinePlanes(ConvertBits(ExtractY(Input), 16), U, V, "YUV", "YYY", "YUV444P16")
+        Input = CombinePlanes(ConvertBits(ExtractY(Input), U.BitsPerComponent), U, V, "YUV", "YYY", Fmt)
     } else if (FMCR) {
         If  (Factor != 1 && CRU) {
             CRFactor = CFactor
@@ -181,7 +189,7 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
         } else {
             CRFactor = 2
             CRLim = 0
-            Y = ConvertBits(ExtractY(Input), 16)
+            Y = ExtractY(Input)
         }
         CRPath1 = PathAIU + CResample + "\2x\"
         CRPath2 = Double == 0 ? PathAIU + Chroma + "\" + string(Factor) + "x\" : Double == 1 ? PathAIU + Chroma + "\4x\" : PathAIU + Chroma + "\2x\"
@@ -190,22 +198,24 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
             U = SincResize(U, U.Width, U.Height, CRLim == 0 ? CROffset : COffset)
             V = AIUFast(ExtractV(Input), CRFactor, CRLim, CRPath1, CRPath2, True)
             V = SincResize(V, V.Width, V.Height, CRLim == 0 ? CROffset : COffset)
-            Input = CombinePlanes(Y, U, V, "YUV", "YYY", "YUV444P16")
+            Input = CombinePlanes(ConvertBits(Y, U.BitsPerComponent), U, V, "YUV", "YYY", Fmt)
         } else {
             U = AIUMedium(ExtractU(Input), CRFactor, CRLim, 0, 0, CRPath1, CRPath2, True, False)
             U = SincResize(U, U.Width, U.Height, CRLim == 0 ? CROffset : COffset)
             V = AIUMedium(ExtractV(Input), CRFactor, CRLim, 0, 0, CRPath1, CRPath2, True, False)
             V = SincResize(V, V.Width, V.Height, CRLim == 0 ? CROffset : COffset)
-            Input = CombinePlanes(Y, U, V, "YUV", "YYY", "YUV444P16")
+            Input = CombinePlanes(ConvertBits(Y, U.BitsPerComponent), U, V, "YUV", "YYY", Fmt)
         }
     } else {
         NOP()
     }
     
-    If ((Factor == 1 && (Width == 0 || (Width == Input.Width && Height == Input.Height))) || (FMCR && CRU)) {
-        return OutDepth < 16 ? ConvertBits(Input, OutDepth) : Input
+    If (Factor == 1 || (FMCR && CRU)) {
+        return IsClip(Alpha) ? AddAlphaPlane(Input, Alpha) : Input
     }
 
+    Global Fmt = !(Chroma == "KrigBilateral" && Input.Is444) ? "YUV444P" + String(OutDepth) : "YUV444P16"
+    Global OutPrec = !(Chroma == "KrigBilateral" && Input.Is444) && OutDepth == 8 ? 1 : 2
     OFactor = Width == 0 ? OFactor : WFactor
     COffset = MPEG1 || Input.Is444 ? 0.0 : 0.25 * (1.0 - 1.0 / OFactor)
     
@@ -238,8 +248,10 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
             P0 = AIUMedium(Input, 2, 0, SWidth, SHeight, Path1, Path2, False, True)
         }
     }
-    
-    TInput = ConvertBits(Input, 16)
+
+    Global Fmt = "YUV444P" + String(OutDepth)
+    Global OutPrec = OutDepth == 8 ? 1 : OutPrec
+    TInput = ConvertBits(Input, OutDepth)
     If (MPYUV) {
         CWidth = Double == 1 ? Input.Width * 4 : Width == 0 ? Input.Width * Factor : Width
         CWidth = Input.Is444 ? CWidth : CWidth / 2
@@ -278,15 +290,16 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
             P2 = AIUMedium(ExtractV(Input), 2, CLim, CWidth, CHeight, CPath1, CPath2, False, True)
             P2 = SincResize(P2, P2.Width, P2.Height, COffset * OFactor)
         } else {
-            T = Input.Is420 ? KrigBilateral(Input, Coffset * 2.0) : KrigBilateral(CombinePlanes(P0, ExtractU(TInput), ExtractV(TInput), "YUV", "YYY", "YUV420P16"), 0.0)
+            T = Input.Is420 ? KrigBilateral(Input, Coffset * 2.0) : KrigBilateral(CombinePlanes(P0, ConvertBits(ExtractU(Input), 16), ConvertBits(ExtractV(Input), 16), "YUV", "YYY", "YUV420P16"), 0.0)
+            P0 = ConvertBits(P0, OutDepth)
             P1 = ExtractU(T)
             P2 = ExtractV(T)
         }
     }
 
     Input = Input.IsY ? P0 : CombinePlanes(P0, P1, P2, Input.IsYUV ? "YUV" : "RGB", "YYY", TInput.PixelType)
-    Input = OutDepth < 16 ? ConvertBits(Input, OutDepth) : Input
-    return Input.IsRGB ? ConvertToRGB(Input) : Input
+    Input = YUY2 && OutDepth == 8 && CResample == "" ? ConvertToYUY2(Input) : Packed ? OutDepth == 8 ? ConvertToRGB24(Input) : OutDepth == 16 ? ConvertToRGB48(Input) : Input : Input
+    return IsClip(Alpha) ? AddAlphaPlane(Input, Alpha) : Input
 }
 
 Function AIUFast(clip c, int Factor, int Lim, string Path1, string Path2, bool CR)
@@ -328,8 +341,8 @@ Function AIUFast(clip c, int Factor, int Lim, string Path1, string Path2, bool C
         H = CR ? H * 2 : H * Factor
         Shader(SPath + "aggregation.cso", Clip1 = 2, Clip2 = x3 ? 3 : 0, Clip3 = x3 ? 4 : 0, Clip4 = x4 ? 5 : 0, Width = W, Height = H)
     }
-    ExecuteShader(last, cc, Clip1Precision = InPrec, Precision = 3, OutputPrecision = 2, PlanarOut = True)
-    ConvertFromShader(Precision = 2, Format = "YUV444P16")
+    ExecuteShader(last, cc, Clip1Precision = InPrec, Precision = 3, OutputPrecision = OutPrec, PlanarOut = True)
+    ConvertFromShader(Precision = OutPrec, Format = Fmt)
     ExtractY()
 }
 
@@ -391,8 +404,8 @@ Function AIUMedium(clip c, int Factor, int Lim, int Width, int Height, string Pa
         Shader(SPath + "aggregation.cso", Clip1 = 2, Clip2 = x3 ? 3 : 0, Clip3 = x3 ? 4 : 0, Clip4 = x4 ? 5 : 0, Width = W, Height = H)
     }
     HQ ? AIUHQ(last, Width, Height, Path2, CreateParamFloat4(W, H), Width > W || Height > H ? True : False) : last
-    ExecuteShader(last, cc, Clip1Precision = InPrec, Precision = 3, OutputPrecision = 2, PlanarOut = x3 && Lim == 1 ? False : True)
-    ConvertFromShader(Precision = 2, Format = "YUV444P16")
+    ExecuteShader(last, cc, Clip1Precision = InPrec, Precision = 3, OutputPrecision = OutPrec, PlanarOut = x3 && Lim == 1 ? False : True)
+    ConvertFromShader(Precision = OutPrec, Format = Fmt)
     ExtractY()
 }
 
@@ -464,8 +477,8 @@ Function AIUVDSR(clip c, int W, int H, string SPath)
     Shader(SPath + "mapping_14_3.cso", Clip1 = 6, Clip2 = 7, Clip3 = 8, Clip4 = 9, output = 4)
     Shader(SPath + "mapping_14_4.cso", Clip1 = 6, Clip2 = 7, Clip3 = 8, Clip4 = 9, output = 5)
     Shader(SPath + "reconstruction.cso", Clip1 = 1, Clip2 = 2, Clip3 = 3, Clip4 = 4, Clip5 = 5)
-    ExecuteShader(last, clip, Clip1Precision = InPrec, Precision = 3, OutputPrecision = 2, PlanarOut = True)
-    ConvertFromShader(Precision = 2, Format = "YUV444P16")
+    ExecuteShader(last, clip, Clip1Precision = InPrec, Precision = 3, OutputPrecision = OutPrec, PlanarOut = True)
+    ConvertFromShader(Precision = OutPrec, Format = Fmt)
     ExtractY()
 }
 
@@ -523,7 +536,7 @@ Function KrigBilateral(clip c, float Offset) {
     Shader(Y, SPath + "LumaDownscalerI.cso", Param2 = LumaSize, Param3 = ChromaSize, Clip1 = 2, Output = 3, Width = c.Width, Height = Chroma.Height)
     Shader(SPath + "LumaDownscalerII.cso", Param2 = LumaSize, Param3 = ChromaSize, Clip1 = 3, Output = 3, Width = Chroma.Width, Height = Chroma.Height)
     Shader(SPath + "KrigBilateral.cso", Param2 = ChromaSize, Param3 = Offset, Clip1 = 1, Clip2 = 2, Clip3 = 3, Width = c.Width, Height = c.Height)
-    ExecuteShader(last, Clip1 = UV, Clip2 = Y, Clip1Precision = InPrec, Clip2Precision = InPrec, Precision = 3, OutputPrecision = 2, PlanarOut = True)
-    ConvertFromShader(Precision = 2, Format = "YUV444P16")
-    return CombinePlanes(ConvertBits(ExtractY(c), 16), ExtractY(last), ExtractU(last), "YUV", "YYY", "YUV444P16")
+    ExecuteShader(last, Clip1 = UV, Clip2 = Y, Clip1Precision = InPrec, Clip2Precision = InPrec, Precision = 3, OutputPrecision = OutPrec, PlanarOut = True)
+    ConvertFromShader(Precision = OutPrec, Format = Fmt)
+    return CombinePlanes(ConvertBits(ExtractY(c), last.BitsPerComponent), ExtractY(last), ExtractU(last), "YUV", "YYY", Fmt)
 }
