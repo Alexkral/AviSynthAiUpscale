@@ -17,7 +17,7 @@ An AviSynth+ implementation of some Super-Resolution Convolutional Neural Networ
 ## Usage
     AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace", int "OutDepth")
 - **Input:** (Default = last). Input image or progressive video in any AviSynth+ color format except YV411 and 32 bit float. Alpha planes are upscaled with Lanczos.
-- **Factor:** (Default = 2). Upscaling factor (1, 2, 3 or 4). 1 is for chroma resampling. Must be 2 when Double is set for Luma and/or Chroma. Ignored when Width and Height are set.
+- **Factor:** (Default = 2). Upscaling factor (1, 2, 3 or 4). 1 is for chroma resampling. Must be 2 when Double is set for Luma and/or Chroma. Ignored when Width and Height are set except for Factor = 1.
 - **Luma:** (Default = "Medium"). Model for luma or RGB upscaling. Must be an AiUpscale model ("Fast", "Medium", "VDSR", "HQ" or "HQ Sharp").
 - **Chroma:** (Default = "Lanczos"). Method for chroma upscaling. Can be an AiUpscale model, KrigBilateral (only for 4:2:0 or 4:4:4 and 2x upscale ratio), or any AviSynth resize method.
 - **CResample:** (Default = ""). Method for chroma resampling. Can be an AiUpscale model (only for 4:2:0), KrigBilateral, any AviSynth method, or an empty string which means that the chroma is not resampled.
