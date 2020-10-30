@@ -1,7 +1,7 @@
-# AviSynth AiUpscale v1.0.1
+# AviSynth AiUpscale v1.1.0
 An AviSynth+ implementation of some Super-Resolution Convolutional Neural Networks.
 
-[Download](https://github.com/Alexkral/AviSynthAiUpscale/releases/tag/v1.0.1 "Download")
+[Download](https://github.com/Alexkral/AviSynthAiUpscale/releases/tag/v1.0 "Download")
 
 
 ## Requirements
@@ -15,16 +15,17 @@ An AviSynth+ implementation of some Super-Resolution Convolutional Neural Networ
 - KrigBilateral option for chroma upscaling/resampling.
 
 ## Usage
-    AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace")
-- **Input:** (Default = last). Input image or progressive video in any AviSynth+ color format except YV411 and 32 bit float.
+    AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", string "CResample", int "Width" , int "Height" , int "Double", string "Mode", string "CPlace", int "OutDepth")
+- **Input:** (Default = last). Input image or progressive video in any AviSynth+ color format except YV411 and 32 bit float. Alpha planes are upscaled with Lanczos.
 - **Factor:** (Default = 2). Upscaling factor (1, 2, 3 or 4). 1 is for chroma resampling. Must be 2 when Double is set for Luma and/or Chroma. Ignored when Width and Height are set.
 - **Luma:** (Default = "Medium"). Model for luma or RGB upscaling. Must be an AiUpscale model ("Fast", "Medium", "VDSR", "HQ" or "HQ Sharp").
 - **Chroma:** (Default = "Lanczos"). Method for chroma upscaling. Can be an AiUpscale model, KrigBilateral (only for 4:2:0 or 4:4:4 and 2x upscale ratio), or any AviSynth resize method.
 - **CResample:** (Default = ""). Method for chroma resampling. Can be an AiUpscale model (only for 4:2:0), KrigBilateral, any AviSynth method, or an empty string which means that the chroma is not resampled.
 - **Width, Height:** (Default = 0). Target Width and Height. Only for the VDSR, HQ and HQ Sharp models. Both must be between 1x and 4x for the VDSR model, and between 2x and 4x for the HQ models. When the chroma is not resampled, Width must be Mod 2 for subsampled formats, and Height must be Mod 2 for 4:2:0. Default = 0 which means that Factor will be used instead.
 - **Double:** (Default = 0). This allows to repeat a 2x upscaling in the same pass. Factor must be 2. Only for the Fast and Medium models. 0 to disable, 1 to repeat a 2x luma upscaling, 2 to repeat a 2x chroma upscaling, and 3 to repeat both. When only used for luma or chroma, the other will be directly upscaled to 4x.
-- **Mode:** (default = "Photo"). Can be "Photo" or "Illustration".
+- **Mode:** (default = "Photo"). Can be "Photo" for anything that comes from a camera, or "Illustration" for artwork, drawings, etc.
 - **CPlace:** (Default = "MPEG2"). Chroma placement when the source is YV12. Same as **ChromaInPlacement** in AviSynth [Convert.](http://avisynth.nl/index.php/Convert "Convert.") This affects correct chroma positioning, most of the time it shouldn't be changed. Can also be "MPEG1" and "DV".
+- **OutDepth:** (Default = Same as input). Output bit depth (8, 10, 12, 14 or 16).
 
 ## Notes
 - There is no limitation about changing the source Aspect Ratio using Width and Height.
@@ -48,7 +49,7 @@ The HQ and HQ Sharp models are made by a Medium model followed by a reduced VDSR
 
 | Lanczos | AiUpscale HQ Sharp |
 | ------------ | ------------ |
-| ![L3x3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/plant_821_L3.png) | ![SRx3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/plant_821_SR.png) |
+| ![L3x3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/bird_47_L3.png) | ![SRx3](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/Results/bird_47_SR.png) |
 
 ## 4x
 
