@@ -89,9 +89,9 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     Assert(CPlace == "MPEG1" || CPlace == "MPEG2" || CPlace == "DV", "CPlace must be MPEG1, MPEG2 or DV")
     Assert(CPlace == "MPEG2" || Input.Is420, "Invalid CPlace")
     Assert(OutDepth == 8 || OutDepth == 10 || OutDepth == 12 || OutDepth == 14 || OutDepth == 16, "Invalid OutDepth")
- 
-    LFactor = Double == 2 ? 4 : Factor
-    Alpha = Input.HasAlpha ? Width == 0 ? LanczosResize(ConvertBits(ExtractA(Input), OutDepth), Input.Width * LFactor, Input.Height * LFactor) : LanczosResize(ConvertBits(ExtractA(Input), OutDepth), Width, Height) : 0
+
+    AFactor = Double != 0 ? 4 : Factor
+    Alpha = Input.HasAlpha ? Width == 0 ? LanczosResize(ConvertBits(ExtractA(Input), OutDepth), Input.Width * AFactor, Input.Height * AFactor) : LanczosResize(ConvertBits(ExtractA(Input), OutDepth), Width, Height) : 0
     YUY2 = Input.IsYUY2
     Packed = Input.IsPackedRGB
     Input = YUY2 ? ConvertToYV16(Input) : Input
@@ -99,7 +99,8 @@ Function AiUpscale(clip Input, int "Factor", string "Luma", string "Chroma", str
     Input = Packed ? ConvertToPlanarRGB(Input) : Input
     Input = Input.BitsPerComponent > 8 ? ConvertBits(Input, 16) : Input
     Input = Input.Is420 && CPlace == "DV" ? ConvertToYUV420(Input, ChromaInPlacement = "DV", ChromaOutPlacement = "MPEG2", chromaresample = "Sinc") : Input
-    CPlace = CPlace == "DV" ? "MPEG2" : CPlace
+    CPlace = CPlace == "DV" ? "MPEG2" : CPlace 
+    LFactor = Double == 2 ? 4 : Factor
     CFactor = Double == 1 ? 4 : Factor
     OFactor = Double == 0 ? Factor : 4
     Lim = Double % 2 == 1 ? 1 : 0
