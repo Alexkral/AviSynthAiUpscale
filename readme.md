@@ -35,6 +35,7 @@ Copy `AiUpscale.avsi` and the `Shaders` folder to the AviSynth+ plugins folder.
 (Note that these are not needed for AviSynth AiUpscale to work).
 
 1 - Install [mpv](https://mpv.io/ "mpv").
+
 2 - Create a folder called `shaders` in `%AppData%\mpv\` for Windows or `~/.config/mpv/` for Linux, and copy the shaders into it.
 
 3 - Create or edit `mpv.conf` in `%AppData%\mpv\` or `~/.config/mpv/` like this:
