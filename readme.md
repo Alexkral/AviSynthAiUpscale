@@ -60,7 +60,7 @@ PSNR and SSIM (evaluated on the Y channel) are also provided for reference.
 ## Quantitative Results
 Below are PSNR and SSIM results (evaluated on the Y channel) of the AiUpscale models compared to other similar methods for image or video upscaling. The low resolution images were generated using the bicubic filter with Catmull-Rom settings, which is the method commonly used for training super-resolution networks, including those tested here. Note however that as an exception to this, the Anime4K models were trained using the average area downsampling method. The AiUpscale models used for all datasets were the "Photo" models, except for the Manga109 dataset for which the "LineArt" models were used. In the same way, the Waifu2x cunet model was used for the Manga109 dataset, and the upconv_7 model for the rest. 
 
-The best performance is shown in <div class="text-red mb-2">red</div>, and the second best performance is shown in <div class="text-blue mb-2">blue</div>.
+The best performance is shown in red, and the second best performance is shown in blue.
 
 ![](https://github.com/Alexkral/AviSynthAiUpscale/blob/master/figures/2x.png)
 
