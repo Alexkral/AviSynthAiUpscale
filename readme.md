@@ -1,7 +1,7 @@
 # AviSynth AiUpscale v1.2.0
 An AviSynth+ implementation of some Super-Resolution Convolutional Neural Networks.
 
-[Download](https://github.com/Alexkral/AviSynthAiUpscale/releases/tag/v1.2.0 "Download")
+[Download](https://github.com/Alexkral/AviSynthAiUpscale/releases/tag/1.2.0 "Download")
 
 
 ## Requirements
